@@ -28,7 +28,14 @@ func getEvent(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event."})
 		return
 	}
-	context.JSON(http.StatusOK, event)
+
+	registrations, err := event.GetRegistrations()
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event."})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"event": event, "registeredUsers": registrations})
 }
 
 func createEvent(context *gin.Context) {
@@ -39,8 +46,8 @@ func createEvent(context *gin.Context) {
 		return
 	}
 
-	event.ID = 1
-	event.UserID = 1
+	userId := context.GetInt64("userId")
+	event.UserID = userId
 
 	err = event.Save()
 	if err != nil {
@@ -57,9 +64,16 @@ func updateEvent(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse event id."})
 		return
 	}
-	_, err = models.GetEventById(eventId)
+
+	userId := context.GetInt64("userId")
+	event, err := models.GetEventById(eventId)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event."})
+		return
+	}
+
+	if event.UserID != userId {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "You are not owner of the event."})
 		return
 	}
 
@@ -86,9 +100,16 @@ func deleteEvent(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"message": "Could not parse event id."})
 		return
 	}
+
+	userId := context.GetInt64("userId")
 	event, err := models.GetEventById(eventId)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event."})
+		return
+	}
+
+	if event.UserID != userId {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "You are not owner of the event."})
 		return
 	}
 
