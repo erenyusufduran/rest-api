@@ -58,3 +58,7 @@ func readPrivateKeyFromFile(filename string) (*ecdsa.PrivateKey, error) {
 	}
 	return privateKey, nil
 }
+
+func extractECDSAPublicKey(privateKey *ecdsa.PrivateKey) *ecdsa.PublicKey {
+	return &privateKey.PublicKey
+}
