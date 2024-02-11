@@ -28,7 +28,14 @@ func getEvent(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event."})
 		return
 	}
-	context.JSON(http.StatusOK, event)
+
+	registrations, err := event.GetRegistrations()
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"message": "Could not fetch event."})
+		return
+	}
+
+	context.JSON(http.StatusOK, gin.H{"event": event, "registeredUsers": registrations})
 }
 
 func createEvent(context *gin.Context) {

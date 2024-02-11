@@ -69,6 +69,27 @@ func GetEventById(id int64) (*Event, error) {
 	return &event, nil
 }
 
+func (e Event) GetRegistrations() ([]int64, error) {
+	query := "SELECT user_id FROM registrations WHERE event_id = ?"
+	rows, err := db.DB.Query(query, e.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var registratedUsers = []int64{}
+	for rows.Next() {
+		var userId int64
+		err := rows.Scan(&userId)
+		if err != nil {
+			return nil, err
+		}
+		registratedUsers = append(registratedUsers, userId)
+	}
+
+	return registratedUsers, nil
+}
+
 func (event Event) Update() error {
 	query := `
 		UPDATE events
